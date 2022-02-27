@@ -3,6 +3,7 @@ var app = express();
 var http = require("http").Server(app);
 var io = require("socket.io")(http);
 var fs = require("fs");
+const port = process.env.PORT || 3000
 app.use(express.static(__dirname + "/"));
 
 app.get("/", function (req, res) {
@@ -51,28 +52,34 @@ io.on("connection", function (socket) {
       console.log("[error]", "leave room :", e);
     }
   });
+  
   socket.on("sendImage", function (data){
     
     if (data.roomname != "") {
       socket.broadcast.to(data.roomname).emit("recvImage", data);
+      socket.broadcast.to(data.roomname).emit("play");
     } else {
       socket.broadcast.emit("recvImage", data);
+      socket.broadcast.emit("play");
     }
     
   });
   socket.on("msg", function (data) {
     //Send message to everyone
     console.log("user from  " + data.roomname + data.user);
+
     if (data.roomname != "") {
       socket.broadcast.to(data.roomname).emit("newmsg", data);
+      socket.broadcast.to(data.roomname).emit("play");
     } else {
       socket.broadcast.emit("newmsg", data);
+      socket.broadcast.emit("play");
     }
   });
   socket.on("test", function (data) {
     console.log("user from  " + data);
   });
 });
-http.listen(3000, function () {
+http.listen(port, function () {
   console.log("listening on localhost:3000");
 });
